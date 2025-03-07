@@ -1,0 +1,59 @@
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.VideoWriter;
+import org.opencv.objdetect.CascadeClassifier;
+
+public class VideoAnalytics {
+
+    public static void main(String[] args) {
+       
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+
+        
+        String cascadePath = "path_to_haar_cascade.xml"; 
+        CascadeClassifier faceCascade = new CascadeClassifier(cascadePath);
+
+       
+        String videoPath = "path_to_video.mp4";
+        VideoCapture videoCapture = new VideoCapture(videoPath);
+        
+        if (!videoCapture.isOpened()) {
+            System.out.println("Error opening video file");
+            return;
+        }
+
+        
+        Size frameSize = new Size(videoCapture.get(3), videoCapture.get(4));
+        VideoWriter videoWriter = new VideoWriter("output_video.mp4", VideoWriter.fourcc('M', 'J', 'P', 'G'), 30, frameSize);
+
+        Mat frame = new Mat();
+        while (videoCapture.read(frame)) {
+            
+            Mat grayFrame = new Mat();
+            Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+
+            
+            Rect[] faces = faceCascade.detectMultiScale(grayFrame, 1.1, 3, 0, new Size(30, 30), new Size());
+
+          
+            for (Rect face : faces) {
+                Imgproc.rectangle(frame, face.tl(), face.br(), new Scalar(0, 255, 0), 3);
+            }
+
+           
+            videoWriter.write(frame);
+        }
+
+        
+        videoCapture.release();
+        videoWriter.release();
+        System.out.println("Face detection completed on video and saved.");
+    }
+}
